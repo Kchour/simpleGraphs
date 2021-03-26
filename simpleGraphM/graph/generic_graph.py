@@ -23,6 +23,7 @@ class GenericGraph(Graph):
     """
     def __init__(self, edge_dict=None, vertex_dict=None, graph_type="undirected", deep_copy=True, default_value=0):
         self.adjList = {}
+        self.graph_type = graph_type
 
         if deep_copy:
             self.edge_dict = copy.deepcopy(edge_dict) 
@@ -32,13 +33,16 @@ class GenericGraph(Graph):
             self.vertex_dict = vertex_dict
 
         if self.edge_dict is not None:
-            # undirected vs directed edges
-            if graph_type is "undirected":
-                temp = {}
-                for key in edge_dict.keys():
-                    temp.update({(key[1], key[0]): edge_dict[key]})
-                self.edge_dict.update(temp)
+            self._update_adj_list()
             
+    def _update_adj_list(self):
+        # undirected vs directed edges
+        if self.graph_type is "undirected":
+            temp = {}
+            for key in self.edge_dict.keys():
+                temp.update({(key[1], key[0]): self.edge_dict[key]})
+            self.edge_dict.update(temp)
+        
             # create an adjacency list!
             for key in self.edge_dict.keys():
                 if key[0] not in self.adjList:
@@ -49,7 +53,25 @@ class GenericGraph(Graph):
                     if key[0] not in self.adjList[key[1]]:
                         self.adjList[key[1]].append(key[0])
                     if key[1] not in self.adjList[key[0]]:
-                        self.adjList[key[0]].append(key[1])                
+                        self.adjList[key[0]].append(key[1])       
+        else:
+            for key in self.edge_dict.keys():
+                if key[0] not in self.adjList:
+                    self.adjList[key[0]] = [key[1]]
+                else:
+                    if key[1] not in self.adjList[key[0]]:
+                        self.adjList[key[0]].append(key[1])
+                if key[1] not in self.adjList:
+                    self.adjList[key[1]] = []    
+
+        # Update self.vertex_dict
+        for v in self.adjList:
+            if v not in self.vertex_dict:
+                self.vertex_dict[v] = None
+
+    # CREATE SETTER AND GETTER FUNCTION FOR vertex_dict attribute
+    # LET adjList keep track of vertex_dict instead! j
+
 
     def edge_count(self):
         if self.edge_dict is not None:   
@@ -58,16 +80,21 @@ class GenericGraph(Graph):
             return 0
 
     def node_count(self):
-        return len(self.adjList) 
+        # adjlist can be zero here
+        return max(len(self.adjList), len(self.vertex_dict))
+
+    def get_vertices(self):
+        return list(self.vertex_dict)
 
     def add_edge(self, edge_dict):
-        """Add edges to our graph
+        """Add edges to our graph. Will silently replace edges if it already exists. 
         
         Arg:
             edge_dict (dict): i.e. {('v1', 'v2'): 5.0}
         
         """
         self.edge_dict.update(edge_dict)
+        self._update_adj_list()
 
     def add_vertex(self, vertex_dict):
         """Vertex to our graph
@@ -88,6 +115,17 @@ class GenericGraph(Graph):
         for e in edge_list:
             #self.edge_dict.pop(e)  #slightly slower
             del self.edge_dict[e]
+            
+            # update adjacency list
+            if self.graph_type == "directed":
+                if e[1] in self.adjList[e[0]]:
+                    self.adjList[e[0]].remove(e[1])
+            else:
+                if e[1] in self.adjList[e[0]]:
+                    self.adjList[e[0]].remove(e[1])
+                if e[0] in self.adjList[e[1]]:
+                    self.adjList[e[1]].remove(e[0])
+
 
     def remove_vertices(self, vertex_list):
         """Delete vertices from our graph
@@ -110,26 +148,53 @@ class GenericGraph(Graph):
         neighs = self.adjList[v]
         return neighs
     
-    def cost(self, *args):
+    def cost(self, *args, **kwargs):
         """Return cost of edge or vertex based on number of args
 
         Args:
             from_node, to_node (vertex, vertex): Key of vertices, contained in edgeDict
             node (vertex): Key of a single vertex, contained in vertexDict
 
+        Kwargs:
+            name (str): To determine the specific reference for multi-weighted edges of graphs
+
         """
+        # unpack name if in kwargs
         try:
+            # case 1) gets an edge weight. case 2) gets a vertex weight
             if len(args) == 2:
                 from_node, to_node = args
+                if "name" in kwargs:
+                    name = kwargs["name"]
+
+                    # if a list of names, then iterate through the list
+                    if type(name)==list:
+                        weight = self.edge_dict[(from_node, to_node)]
+                        for n in name:
+                            weight = weight[n]     
+                    else:
+                        weight = self.edge_dict[(from_node, to_node)][name]               
+                    return weight
                 weight = self.edge_dict[(from_node, to_node)]
                 return weight
             elif len(args) == 1:
                 node = args[0]
+                if "name" in kwargs:
+                    name = kwargs["name"]
+                    
+                    # if a list of names, then iterate through the list
+                    if type(name)==list:
+                        weight = self.vertex_dict[node]
+                        for n in name:
+                            weight = weight[n]     
+                    else:
+                        weight = self.vertex_dict[node][name]
+                    return weight
+
                 weight = self.vertex_dict[node]
                 return weight
             else:
                 print("vertex or edge not found using arguments: ", args)
-                raise ValueError
+                raise KeyError("vertex or edge not found using arguments: ")
         except Exception as E_:
-            print(E_)
-            return type(E_)
+            raise E_
