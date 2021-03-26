@@ -57,11 +57,11 @@ class TestSquaregridGraph(unittest.TestCase):
 
         # Create BFS object, with A*star
         bfs = BestFirstSearch(graph=sq, start=(-15,-15), goal=(15,15), heuristic_type='diagonal_nonuniform', visualize=False)
-        parent_astar, cost_so_far_astar = bfs.use_algorithm()
+        parent_astar, cost_so_far_astar = bfs.run()
 
         # Create BFS object with Dijkstra
         bfs = BestFirstSearch(graph=sq, start=(-15,-15), goal=(15,15), heuristic_type=None, visualize=False)
-        parent_dijkstra, cost_so_far_djikstra = bfs.use_algorithm()
+        parent_dijkstra, cost_so_far_djikstra = bfs.run()
 
         # assert size of cost_so_far
         self.assertGreaterEqual(len(cost_so_far_djikstra), len(cost_so_far_astar))

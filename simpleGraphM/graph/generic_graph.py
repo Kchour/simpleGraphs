@@ -65,9 +65,10 @@ class GenericGraph(Graph):
                     self.adjList[key[1]] = []    
 
         # Update self.vertex_dict
-        for v in self.adjList:
-            if v not in self.vertex_dict:
-                self.vertex_dict[v] = None
+        if self.vertex_dict is not None:
+            for v in self.adjList:
+                if v not in self.vertex_dict:
+                    self.vertex_dict[v] = None
 
     # CREATE SETTER AND GETTER FUNCTION FOR vertex_dict attribute
     # LET adjList keep track of vertex_dict instead! j

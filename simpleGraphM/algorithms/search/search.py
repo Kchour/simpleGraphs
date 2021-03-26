@@ -23,7 +23,7 @@ import numpy as np
 import time
 
 from .search_utils import PriorityQueueHeap
-# from steinerpy.library.animation.animationV2 import AnimateV2
+from .search_utils import Queue
 
 class Search:
     
@@ -33,6 +33,15 @@ class Search:
         self.graph = graph
         self.start = start
         self.goal = goal
+        
+        # Open set or frontier must be defined properly 
+        self.frontier = None
+        
+        # closed list with cost-so-far
+        self.g = {}
+
+        # A linked list giving predecessor nodes
+        self.parent = {}
 
     def set_start(self, start):
         self.start = start
@@ -40,14 +49,44 @@ class Search:
     def set_goal(self, goal):
         self.goal = goal
 
-    @classmethod
-    def update_expanded_nodes(cls):
-        cls.total_expanded_nodes +=1
+    def run(self):
+        pass
 
-    @classmethod
-    def reset(cls):
-        """Reset all class variables """
-        cls.total_expanded_nodes = 0
+class BreadthFirstSearch(Search):
+
+    def __init__(self, graph, start=None, goal=None):
+        Search.__init__(self, graph, start, goal)
+        
+        # init frontier
+        self.frontier = Queue()
+        self.frontier.put(self.start)
+
+        # init the rest
+        self.parent[self.start] = None
+        self.g[self.start] = 0
+
+    def skip_case(self, u, v):
+        return False
+
+    def run(self):
+        while not self.frontier.empty():
+            # deque the frontier
+            current = self.frontier.get()
+
+            if current == self.goal:
+                break
+
+            for next in self.graph.neighbors(current):
+                # Skip condition for special cases
+                if self.skip_case(current, next):
+                    continue
+                
+                # Rest of the bfs algorithm
+                g_next = self.g[current] + 1
+                if next not in self.g or g_next < self.g[next]:
+                    self.frontier.put(next)
+                    self.g[next] = g_next
+                    self.parent[next] = current
 
 class BestFirstSearch(Search):
     """Standard A-Star or Dijkstra search on any generic graph, though heuristics are only defined for grid-based graphs atm"""
@@ -68,7 +107,6 @@ class BestFirstSearch(Search):
 
         #depth limit
         self.depth_limit = depth_limit
-
         self.boundary_nodes = set()
 
     def heuristic(self, a, b, type_='manhattan'):
@@ -98,7 +136,7 @@ class BestFirstSearch(Search):
 
         self.depth_limit = new_depth_limit
 
-    def use_algorithm(self):
+    def run(self):
         """ Usage:
             - call to runs full algorithm until termination
 
@@ -114,19 +152,12 @@ class BestFirstSearch(Search):
         while not frontier.empty():
             _, current = frontier.get()  # update current to be the item with best priority
 
-            # Update stats logging
-            BestFirstSearch.update_expanded_nodes()
-
             if self.visualize:
                 AnimateV2.add("current", current[0], current[1], markersize=10, marker='o')
 
             # early exit if we reached our goal
             if current == self.goal: 
                 break
-            # early exit if all of our goals in the closed set
-            if self.goal is not None: 
-                if len(set(self.goal).intersection(set(g)-set(frontier.elements))) == len(self.goal):
-                    break
 
             # expand current node and check neighbors
             for next in self.graph.neighbors(current):
