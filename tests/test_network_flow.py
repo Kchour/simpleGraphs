@@ -30,7 +30,7 @@ class TestFlow(unittest.TestCase):
 
     #     mf = MaxFlow(myGraph)
 
-    # def test_max_flow_with_fordfulkerson_edkarp_simple_poor(self):
+    # def test_max_flow_with_fordfulkerson_edkarp_simple_1(self):
 
     #     #             +---------+             
     #     #      +------>         |-------+     
@@ -75,19 +75,89 @@ class TestFlow(unittest.TestCase):
     #     self.assertEquals(myGraph.edge_dict[('1','t')]['flow'], 2)
     #     self.assertEquals(myGraph.edge_dict[('2','t')]['flow'], 3)
 
-    def test_max_flow_with_fordfulkerson_edkarp_simple_better(self):
-        # Define some edges
+    # def test_max_flow_with_fordfulkerson_edkarp_simple_2(self):
+    #     # Define some edges
        
-        edgeDict = {(0, 1): {"cap": 16},
-                    (0, 2): {"cap": 13},
-                    (1, 2): {"cap": 10},
-                    (1, 3): {"cap": 12},
-                    (2, 1): {"cap": 4},
-                    (2, 4): {"cap": 14},
-                    (3, 2): {"cap": 9},
-                    (3, 5): {"cap": 20},
-                    (4, 3): {"cap": 7},
-                    (4, 5): {"cap": 4},
+    #     edgeDict = {(0, 1): {"cap": 16},
+    #                 (0, 2): {"cap": 13},
+    #                 (1, 2): {"cap": 10},
+    #                 (1, 3): {"cap": 12},
+    #                 (2, 1): {"cap": 4},
+    #                 (2, 4): {"cap": 14},
+    #                 (3, 2): {"cap": 9},
+    #                 (3, 5): {"cap": 20},
+    #                 (4, 3): {"cap": 7},
+    #                 (4, 5): {"cap": 4},
+    #                 }
+
+    #     myGraph = GraphFactory.create_graph("Generic", edge_dict=edgeDict, vertex_dict=None, graph_type="directed", deep_copy=False)
+
+    #     # Test undefined sink, source error
+    #     mf = MaxFlow(myGraph)
+    #     self.assertRaises(ValueError, mf.run)
+
+    #     # either is valid
+    #     mf = MaxFlow(myGraph, source=0, sink=5)
+
+    #     # or this
+    #     mf = MaxFlow(myGraph)
+    #     mf.set_source(0)
+    #     mf.set_sink(5)
+
+    #     # execute
+    #     mf.run()
+        
+    #     # Test max flow value
+    #     self.assertEquals(myGraph.edge_dict[(0,1)]['flow']+myGraph.edge_dict[(0,2)]['flow'], 23)
+
+    # def test_max_flow_with_fordfulkerson_edkarp_simple_3(self):
+    #     # Define some edges
+       
+    #     edgeDict = {('S', 'A'): {"cap": 4},
+    #                 ('S', 'B'): {"cap": 2},
+    #                 ('A', 'C'): {"cap": 3},
+    #                 ('B', 'C'): {"cap": 2},
+    #                 ('B', 'D'): {"cap": 3},
+    #                 ('C', 'B'): {"cap": 1},
+    #                 ('C', 'T'): {"cap": 2},
+    #                 ('D', 'T'): {"cap": 4},
+    #                 }
+
+    #     myGraph = GraphFactory.create_graph("Generic", edge_dict=edgeDict, vertex_dict=None, graph_type="directed", deep_copy=False)
+
+    #     # Test undefined sink, source error
+    #     mf = MaxFlow(myGraph)
+    #     self.assertRaises(ValueError, mf.run)
+
+    #     # either is valid
+    #     # mf = MaxFlow(myGraph, source='S', sink='T')
+
+    #     # or this
+    #     mf = MaxFlow(myGraph)
+    #     mf.set_source('S')
+    #     mf.set_sink('T')
+
+    #     # execute
+    #     mf.run()
+
+    #     # Test max flow value
+    #     self.assertEquals(myGraph.edge_dict[('S','A')]['flow']+myGraph.edge_dict[('S','B')]['flow'], 5)
+
+
+    # This test relies on reverse edges
+    def test_max_flow_with_fordfulkerson_edkarp_simple_4(self):
+        # Define some edges       
+        edgeDict = {('A', 'B'): {"cap": 3},
+                    ('A', 'D'): {"cap": 3},
+                    ('B', 'C'): {"cap": 4},
+                    ('C', 'A'): {"cap": 3},
+                    ('C', 'D'): {"cap": 1},
+                    ('C', 'E'): {"cap": 2},
+                    ('D', 'E'): {"cap": 2},
+                    ('D', 'F'): {"cap": 6},
+                    ('E', 'B'): {"cap": 1},
+                    ('E', 'G'): {"cap": 1},
+                    ('F', 'G'): {"cap": 9},
                     }
 
         myGraph = GraphFactory.create_graph("Generic", edge_dict=edgeDict, vertex_dict=None, graph_type="directed", deep_copy=False)
@@ -97,17 +167,20 @@ class TestFlow(unittest.TestCase):
         self.assertRaises(ValueError, mf.run)
 
         # either is valid
-        mf = MaxFlow(myGraph, source=0, sink=5)
+        # mf = MaxFlow(myGraph, source='A', sink='G')
 
         # or this
         mf = MaxFlow(myGraph)
-        mf.set_source(0)
-        mf.set_sink(5)
+        mf.set_source('A')
+        mf.set_sink('G')
 
         # execute
         mf.run()
+
+        # Test max flow value
+        self.assertEquals(myGraph.edge_dict[('A','B')]['flow']+myGraph.edge_dict[('A','D')]['flow'], 5)
+
         pass
-        
 
 
 if __name__ == "__main__":

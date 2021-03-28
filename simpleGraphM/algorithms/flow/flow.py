@@ -1,14 +1,20 @@
 from simpleGraphM.algorithms.search import BreadthFirstSearch
-class MaxFlow:
+from simpleGraphM.graph import GraphFactory
 
+class MaxFlow:
+    '''Implementation of Ford-Fulkerson's Algorithm via Edmonds-Karp, requring
+        a shortest augmenting path each iteration
+
+    '''
     def __init__(self, G, source=None, sink=None):
-        # construct Gf, the residual graph
-        self.Gf = G
+        # construct Gf, the residual graph.
+        self.G = G
+        self.Gf = GraphFactory.create_graph("Generic", edge_dict=G.edge_dict, vertex_dict=None, graph_type="undirected", deep_copy=True)
         self.source = source
         self.sink = sink
         for e, val in G.edge_dict.items():
-            val["flow"] = 0 
-        
+            val["flow"] = 0        
+
 
     def set_source(self, source):
         self.source = source
@@ -17,7 +23,7 @@ class MaxFlow:
         self.sink = sink
 
     def run(self):
-        # search for augmenting path in gf
+        # search for first augmenting path in gf
         isPath, path = self.augmenting_path()
         while isPath:
             # compute residual capacity
@@ -27,10 +33,10 @@ class MaxFlow:
                     min_cf = self.residual_cap(e[0], e[1])
             # increment the flow in graph G
             for e in zip(path, path[1:]):
-                if e in self.Gf.edge_dict:
-                    self.Gf.edge_dict[e]['flow'] += min_cf
+                if e in self.G.edge_dict:
+                    self.G.edge_dict[e]['flow'] += min_cf
                 else:
-                    self.Gf.edge_dict[e[1]. e[0]]['flow'] -= min_cf 
+                    self.G.edge_dict[e[1], e[0]]['flow'] -= min_cf 
             
             # Find another augmenting path
             isPath, path = self.augmenting_path()
@@ -40,12 +46,13 @@ class MaxFlow:
             #     print(self.residual_cap(e[0], e[1])) 
 
         # Report the good news
+        pass
         
     def residual_cap(self,u,v):
-        if (u,v) in self.Gf.edge_dict:
-            return self.Gf.edge_dict[(u,v)]['cap'] - self.Gf.edge_dict[(u,v)]['flow']
-        elif (v,u) in self.Gf.edge_dict:
-            return self.Gf.edge_dict[(v,u)]['flow']
+        if (u,v) in self.G.edge_dict:
+            return self.G.edge_dict[(u,v)]['cap'] - self.G.edge_dict[(u,v)]['flow']
+        elif (v,u) in self.G.edge_dict:
+            return self.G.edge_dict[(v,u)]['flow']
         else:
             return 0
 
