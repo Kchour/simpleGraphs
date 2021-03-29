@@ -1,1 +1,1 @@
-from . flow import MaxFlow
+from . flow import MaxFlow, INF

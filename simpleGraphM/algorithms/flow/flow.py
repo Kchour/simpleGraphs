@@ -1,5 +1,8 @@
 from simpleGraphM.algorithms.search import BreadthFirstSearch
 from simpleGraphM.graph import GraphFactory
+import numpy as np
+
+INF = np.inf
 
 class MaxFlow:
     '''Implementation of Ford-Fulkerson's Algorithm via Edmonds-Karp, requring
@@ -15,6 +18,11 @@ class MaxFlow:
         for e, val in G.edge_dict.items():
             val["flow"] = 0        
 
+        # Variables defined at termination
+        self.maxFlowVal = None
+        self.minCutVal = 0
+        self.minCutSet = {}
+        self.reachSet = None
 
     def set_source(self, source):
         self.source = source
@@ -83,6 +91,13 @@ class MaxFlow:
             path.reverse()
             return True, path 
         else:
+            self.reachSet = bfs.g
+            for v in self.reachSet:
+                for w in self.G.neighbors(v):
+                    if w not in self.reachSet:
+                        self.minCutSet.update({(v,w): self.G.cost(v, w, name='flow')})
+                        self.minCutVal += self.G.cost(v, w, name='flow')
+            self.maxFlowVal = sum(self.G.cost(self.source, v, name='flow') for v in self.G.neighbors(self.source))
             return False, None
 
         pass
