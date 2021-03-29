@@ -202,6 +202,41 @@ class TestFlow(unittest.TestCase):
         # Test min-cut and max-flow values
         self.assertEqual(mf.maxFlowVal, mf.minCutVal)
 
+    def test_max_flow_with_fordfulkerson_edkarp_infinity_1(self):
+        # Define some edges       
+        edgeDict = {('r', 'a'): {"cap": 2},
+                    ('r', 'b'): {"cap": 4},
+                    ('r', 'c'): {"cap": 3},
+                    ('r', 'd'): {"cap": 2},
+                    ('e', 's'): {"cap": 7},
+                    ('f', 's'): {"cap": 1},
+                    ('g', 's'): {"cap": 3},
+                    ('h', 's'): {"cap": 1},
+                    ('a', 'e'): {"cap": INF},
+                    ('b', 'a'): {"cap": INF},
+                    ('b', 'c'): {"cap": INF},
+                    ('c', 'd'): {"cap": INF},
+                    ('c', 'f'): {"cap": INF},
+                    ('f', 'g'): {"cap": INF},
+                    ('d', 'g'): {"cap": INF},
+                    ('h', 'd'): {"cap": INF},
+                    }
+
+        myGraph = GraphFactory.create_graph("Generic", edge_dict=edgeDict, vertex_dict=None, graph_type="directed", deep_copy=False)
+
+        mf = MaxFlow(myGraph)
+        self.assertRaises(ValueError, mf.run)
+
+        # Create mf object and set source + sink
+        mf = MaxFlow(myGraph)
+        mf.set_source('r')
+        mf.set_sink('s')
+
+        # execute
+        mf.run()
+
+        # Test min-cut and max-flow values
+        self.assertEqual(mf.maxFlowVal, mf.minCutVal)
 
 if __name__ == "__main__":
     unittest.main()
