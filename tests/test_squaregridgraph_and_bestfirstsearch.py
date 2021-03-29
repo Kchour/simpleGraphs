@@ -37,7 +37,6 @@ class TestSquaregridGraph(unittest.TestCase):
 
         # Show image (comment this out if it blocks)
         sq.show_grid()
-        print("")
 
         # TODO: test the other functions in SquareGrid       
 
@@ -61,11 +60,13 @@ class TestSquaregridGraph(unittest.TestCase):
 
         # Create BFS object with Dijkstra
         bfs = BestFirstSearch(graph=sq, start=(-15,-15), goal=(15,15), heuristic_type=None, visualize=False)
-        parent_dijkstra, cost_so_far_djikstra = bfs.run()
+        parent_dijkstra, cost_so_far_dijkstra = bfs.run()
 
         # assert size of cost_so_far
-        self.assertGreaterEqual(len(cost_so_far_djikstra), len(cost_so_far_astar))
-        print("")
+        self.assertGreaterEqual(len(cost_so_far_dijkstra), len(cost_so_far_astar))
+        
+        # shortest path val should be the same
+        self.assertEqual(cost_so_far_astar[(15,15)], cost_so_far_dijkstra[(15,15)])
 
     #def test_IGraph_abstract(self):
 
@@ -76,6 +77,5 @@ class TestSquaregridGraph(unittest.TestCase):
     # # Create a mock square grid
     # mock_squareGrid.return_value = SquareGrid(grid=grid, grid_dim=grid_dim, grid_size=grid_size, n_type= n_type)
 
-    
 if __name__ == "__main__":
     unittest.main()

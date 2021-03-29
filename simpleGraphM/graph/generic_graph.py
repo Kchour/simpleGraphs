@@ -2,29 +2,47 @@ import copy
 from .graph import Graph
 
 class GenericGraph(Graph):
-    """A class for the most generic graph type
-
-    Stores both an adjaceny list and cost table
+    """A class for the most generic graph type. Stores both an adjaceny list and cost table
 
     Parameters:
-        edge_dict (dict): Contains all edges and the respective weight, i.e. {('v1', 'v2'): 5.0}
-        graph_type (str): "undirected" or None
-        visualize (str): Whether to use networkx to visualize results
+        edge_dict (dict): Contains all edges and the respective weight, i.e. {('v1', 'v2'): 5.0}. Weights can be anything (a list, a dict)
+        vertex_dict (dict): Contains a key-value pair of vertices and their weights
+        graph_type (str): "undirected" or "directed" (by default "directed")
+        visualize (str): Whether to visualize results using matplotlib (not implemented yet)
+        deep_copy (bool): Whether to create a deep copy (rather than a shallow copy) of input dictionaries
 
     Attributes:
         adjList (dict): For each node, a list of adjacent nodes are given
         edge_dict (dict): For each edge, a weight is given
+        vertex_dict (dict): For each node, a weight is given
 
     Todo: 
-        - fix visualization for larger graphs
-        - Need further test the adjaceny list!
-        - Need to update Adjaceny list, whenever cost table is updated!
+        - Add visualization capabilities
 
     """
-    def __init__(self, edge_dict=None, vertex_dict=None, graph_type="undirected", deep_copy=True, default_value=0):
+    @staticmethod
+    def mat_to_dict(mat):
+        """Return a edge_dict representation of edges
+
+        Parameter:
+            mat (list of list): elements that are nonzero or non-None type specify an adjacency
+        
+        Return:
+            edge_dict (dict): A dict where each entry is a edge, keyed by value of that edge (which could be a hyper edge)
+
+        """
+        edge_dict = {}
+        for i, row_vect in enumerate(mat):
+            for j, val in enumerate(row_vect):
+                if val != 0 and val != None:
+                    edge_dict.update({(i,j): val})
+        return edge_dict
+
+    def __init__(self, edge_dict=None, vertex_dict=None, graph_type="directed", deep_copy=True):
         self.adjList = {}
         self.graph_type = graph_type
 
+        # Deep copy to avoid modifying original graph by reference
         if deep_copy:
             self.edge_dict = copy.deepcopy(edge_dict) 
             self.vertex_dict = copy.deepcopy(vertex_dict)
@@ -34,6 +52,11 @@ class GenericGraph(Graph):
 
         if self.edge_dict is not None:
             self._update_adj_list()
+
+        if edge_dict is None:
+            self.edge_dict = {}
+        if vertex_dict is None:
+            self.vertex_dict = {}
             
     def _update_adj_list(self):
         # undirected vs directed edges
@@ -63,6 +86,8 @@ class GenericGraph(Graph):
                         self.adjList[key[0]].append(key[1])
                 if key[1] not in self.adjList:
                     self.adjList[key[1]] = []    
+
+        # CONSIDER DELETING EMPTY ADJACENCY KEYS
 
         # Update self.vertex_dict
         if self.vertex_dict is not None:
@@ -105,6 +130,7 @@ class GenericGraph(Graph):
         
         """
         self.vertex_dict.update(vertex_dict)
+        # SHOULD WE ALSO UPDATE ADJ LIST TO CONTAIN NEW NODES?
    
     def remove_edges(self, edge_list):
         """Delete specific edges in our graph
@@ -126,7 +152,6 @@ class GenericGraph(Graph):
                     self.adjList[e[0]].remove(e[1])
                 if e[0] in self.adjList[e[1]]:
                     self.adjList[e[1]].remove(e[0])
-
 
     def remove_vertices(self, vertex_list):
         """Delete vertices from our graph
