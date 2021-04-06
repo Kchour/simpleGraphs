@@ -50,13 +50,13 @@ class GenericGraph(Graph):
             self.edge_dict = edge_dict
             self.vertex_dict = vertex_dict
 
-        if self.edge_dict is not None:
-            self._update_adj_list()
-
         if edge_dict is None:
             self.edge_dict = {}
         if vertex_dict is None:
             self.vertex_dict = {}
+
+        if self.edge_dict is not None:
+            self._update_adj_list()
             
     def _update_adj_list(self):
         # undirected vs directed edges
