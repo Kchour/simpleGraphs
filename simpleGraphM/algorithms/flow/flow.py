@@ -9,7 +9,7 @@ INF = np.inf
 class Queue:
     """FIFO data structure """
     def __init__(self):
-        # deque is a double ended queue. you can add or remove elements on the left or right
+        # deque is a double ended queue. you can add or remove elements from the left or right
         self.elements = collections.deque()
 
     def empty(self):
@@ -34,7 +34,7 @@ class MaxFlow:
         self.source = source
         self.sink = sink  
         # Add flow to edges
-        for e, val in self.G.edge_dict.items():
+        for val in self.G.edge_dict.values():
             val["flow"] = 0   
 
         # Variables defined at termination
@@ -58,6 +58,15 @@ class MaxFlow:
             raise ValueError("Please select a method from this list: {}".format(str(list(mapping))))
         mapping[method]()    
 
+    def __set_min_cut(self, reachSet):
+        self.reachSet = reachSet
+        for v in self.reachSet:
+            for w in self.G.neighbors(v):
+                if w not in self.reachSet:
+                    self.minCutSet.update({(v,w): self.G.cost(v, w, name='flow')})
+                    self.minCutVal += self.G.cost(v, w, name='flow')
+        self.maxFlowVal = sum(self.G.cost(self.source, v, name='flow') for v in self.G.neighbors(self.source))
+
     ##############################
     ### PUSH RELABEL ALGORITHM ###
     ##############################  
@@ -66,6 +75,33 @@ class MaxFlow:
         excessQ = Queue()
 
         # initialize the algorithm        
+        self.__init_preflow(excessQ)
+
+        # Keep running until no more excess/active nodes exist
+        while not excessQ.empty():
+            # Get active node
+            u = excessQ.get()
+
+            self.__relabel(u)
+
+            for v in self.Gf.neighbors(u):
+                self.__push(u,v)
+                if self.G.vertex_dict[v]["excess"]>0 and v != self.source and v!= self.sink:
+                    excessQ.put(v) 
+
+            if self.G.vertex_dict[u]["excess"]>0:
+                excessQ.put(u)        
+    
+        # Get min cut data
+        bfs = BreadthFirstSearch(self.Gf, start=self.source, goal=self.sink)
+        # Rebind skip condition in bfs
+        bfs.skip_case = self.__skip_condition
+        bfs.run()
+
+        reachSet = bfs.g
+        self.__set_min_cut(reachSet)
+
+    def __init_preflow(self, excessQ: Queue):
         # Add excess and height to vertices
         for v, val in self.G.vertex_dict.items():
             if val is None:
@@ -82,25 +118,7 @@ class MaxFlow:
             self.G.vertex_dict[self.source]["excess"]-=self.G.edge_dict[(self.source,v)]["cap"]
             excessQ.put(v)
 
-        counter = 0
-        while not excessQ.empty():
-            # Get active node
-            u = excessQ.get()
-
-            self.__relabel(u)
-
-            for v in self.Gf.neighbors(u):
-                self.__push(u,v)
-                if self.G.vertex_dict[v]["excess"]>0 and v != self.source and v!= self.sink:
-                    excessQ.put(v) 
-
-            if self.G.vertex_dict[u]["excess"]>0:
-                excessQ.put(u)        
-
-            print(counter)
-            counter += 1
-
-    def __push(self,u, v):
+    def __push(self, u, v):
         """Because u is overflowing,                                                                                                                                                                                         
         push some flow from u to v 
 
@@ -115,8 +133,7 @@ class MaxFlow:
             #update excess
             self.G.vertex_dict[u]["excess"]-= del_f
             self.G.vertex_dict[v]["excess"]+= del_f
-            print("Pushing", del_f, u,  "to", v)
-            pass
+            # print("Pushing", del_f, u,  "to", v)
 
     def __relabel(self, u):
         """Relabel the overflowing node u s.t. for all outgoing edges with non-zero residual capacity, +1 to min height
@@ -133,9 +150,8 @@ class MaxFlow:
                     else:
                         UV_LESS_THAN = False
             if min_h is not None and UV_LESS_THAN is True:
-                print("relabeled", u, self.G.vertex_dict[u]["height"], "to",  1 + min_h)
+                # print("relabeled", u, self.G.vertex_dict[u]["height"], "to",  1 + min_h)
                 self.G.vertex_dict[u]["height"] = 1 + min_h
-                pass
 
     ##############################
     ### EDMONDS-KARP ALGORITHM ###
@@ -224,14 +240,9 @@ class MaxFlow:
             path.reverse()
             return True, path 
         else:
-            # Terminate if no augmenting path exists and store answers
-            self.reachSet = bfs.g
-            for v in self.reachSet:
-                for w in self.G.neighbors(v):
-                    if w not in self.reachSet:
-                        self.minCutSet.update({(v,w): self.G.cost(v, w, name='flow')})
-                        self.minCutVal += self.G.cost(v, w, name='flow')
-            self.maxFlowVal = sum(self.G.cost(self.source, v, name='flow') for v in self.G.neighbors(self.source))
+            # Terminate if no augmenting path exists and get min cut data
+            reachSet = bfs.g
+            self.__set_min_cut(reachSet)
             return False, None
 
         pass
