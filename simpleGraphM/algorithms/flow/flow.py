@@ -80,67 +80,62 @@ class MaxFlow:
             self.G.edge_dict[(self.source,v)]["flow"] = self.G.edge_dict[(self.source,v)]["cap"]
             self.G.vertex_dict[v]["excess"] = self.G.edge_dict[(self.source,v)]["cap"]
             self.G.vertex_dict[self.source]["excess"]-=self.G.edge_dict[(self.source,v)]["cap"]
-
             excessQ.put(v)
-        
+
+        counter = 0
         while not excessQ.empty():
             # Get active node
             u = excessQ.get()
-            # choose to relabel or push
-            relabel_cases = []
-            push_cases = []
+
+            self.__relabel(u)
+
             for v in self.Gf.neighbors(u):
-                if v != self.source and v != self.sink:                
-                    if self.__residual_cap(u,v)>0 and self.G.vertex_dict[u]["height"] <= self.G.vertex_dict[v]["height"]:
-                        relabel_cases.append(True)
-                    else:
-                        relabel_cases.append(False)
+                self.__push(u,v)
+                if self.G.vertex_dict[v]["excess"]>0 and v != self.source and v!= self.sink:
+                    excessQ.put(v) 
 
-                if self.__residual_cap(u,v)>0 and self.G.vertex_dict[u]["height"] == self.G.vertex_dict[v]["height"] + 1:
-                    push_cases.append(v)
+            if self.G.vertex_dict[u]["excess"]>0:
+                excessQ.put(u)        
 
-                if self.G.vertex_dict[v]["excess"]>0:
-                    excessQ.put(v)
-
-            if all(relabel_cases):
-                self.__relabel(u)
-                if self.G.vertex_dict[u]["excess"]>0:
-                    excessQ.put(u)    
-
-            if push_cases:
-                # for v in push_cases:
-                v = push_cases[0]
-                self.__push(u, v)
-
-
-                    
-        pass
+            print(counter)
+            counter += 1
 
     def __push(self,u, v):
-        """Because u is overflowing, push some flow from u to v 
+        """Because u is overflowing,                                                                                                                                                                                         
+        push some flow from u to v 
 
         """
         # amount of flow to push
-        del_f = min(self.G.vertex_dict[u]["excess"], self.__residual_cap(u,v))
-        if (u,v) in self.G.edge_dict:
-            self.G.edge_dict[(u,v)]['flow'] += del_f
-        else:
-            self.G.edge_dict[(v,u)]["flow"]-= del_f
-        #update excess
-        self.G.vertex_dict[u]["excess"]-= del_f
-        self.G.vertex_dict[v]["excess"]+= del_f
+        if self.G.vertex_dict[u]["excess"]>0 and self.__residual_cap(u,v)>0 and self.G.vertex_dict[u]["height"] == self.G.vertex_dict[v]["height"]+1:
+            del_f = min(self.G.vertex_dict[u]["excess"], self.__residual_cap(u,v))
+            if (u,v) in self.G.edge_dict:
+                self.G.edge_dict[(u,v)]['flow'] += del_f
+            else:
+                self.G.edge_dict[(v,u)]["flow"]-= del_f
+            #update excess
+            self.G.vertex_dict[u]["excess"]-= del_f
+            self.G.vertex_dict[v]["excess"]+= del_f
+            print("Pushing", del_f, u,  "to", v)
+            pass
 
     def __relabel(self, u):
         """Relabel the overflowing node u s.t. for all outgoing edges with non-zero residual capacity, +1 to min height
         
         """
-        min_h = None
-        for v in self.Gf.neighbors(u):
-            if self.__residual_cap(u,v) > 0 and v != self.source and v != self.sink:
-                if min_h is None or self.G.vertex_dict[v]["height"] < min_h:
-                    min_h = self.G.vertex_dict[v]["height"]
-        if min_h is not None: 
-            self.G.vertex_dict[u]["height"] = 1 + min_h
+        if self.G.vertex_dict[u]["excess"]>0:
+            UV_LESS_THAN = True
+            min_h = None
+            for v in self.Gf.neighbors(u):
+                if self.__residual_cap(u,v) > 0: 
+                    if u != self.source and u != self.sink and self.G.vertex_dict[u]["height"] <= self.G.vertex_dict[v]["height"]:
+                        if min_h is None or self.G.vertex_dict[v]["height"] < min_h:
+                            min_h = self.G.vertex_dict[v]["height"]
+                    else:
+                        UV_LESS_THAN = False
+            if min_h is not None and UV_LESS_THAN is True:
+                print("relabeled", u, self.G.vertex_dict[u]["height"], "to",  1 + min_h)
+                self.G.vertex_dict[u]["height"] = 1 + min_h
+                pass
 
     ##############################
     ### EDMONDS-KARP ALGORITHM ###
