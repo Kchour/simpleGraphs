@@ -148,16 +148,25 @@ class MaxFlow:
         # search for first augmenting path in gf
         isPath, path = self.__augmenting_path()
         while isPath:
-            # compute residual capacity
+            # compute min residual capacity, i.e. bottleneck
             min_cf = None
             for e in zip(path, path[1:]):
                 if min_cf is None or self.__residual_cap(e[0], e[1]) < min_cf:
                     min_cf = self.__residual_cap(e[0], e[1])
             # increment the flow in graph G
             for e in zip(path, path[1:]):
-                if e in self.G.edge_dict:
+                if e in self.G.edge_dict and (e[1], e[0]) in self.G.edge_dict:
+                    # special case when both arcs exist. Decrease reverse flow as much as possible, then increase
+                    # forward flow with remaining residual capacity
+                    del_reverse = min(min_cf, self.G.edge_dict[(e[1], e[0])]['flow'])                    
+                    self.G.edge_dict[(e[1], e[0])]['flow']-= del_reverse
+                    del_forward = min_cf - del_reverse
+                    self.G.edge_dict[e]['flow']+= del_forward
+                elif e in self.G.edge_dict:
+                    # Increase forward edge flow
                     self.G.edge_dict[e]['flow'] += min_cf
                 else:
+                    # Reduce reverse edge flow
                     self.G.edge_dict[e[1], e[0]]['flow'] -= min_cf 
             
             # Find another augmenting path
@@ -179,7 +188,9 @@ class MaxFlow:
             return 0
 
     def __residual_cap(self,u,v):
-        if (u,v) in self.G.edge_dict:
+        if (u,v) in self.G.edge_dict and (v,u) in self.G.edge_dict:
+            return self.G.edge_dict[(u,v)]['cap'] - self.G.edge_dict[(u,v)]['flow'] + self.G.edge_dict[(v,u)]['flow']
+        elif (u,v) in self.G.edge_dict:            
             return self.G.edge_dict[(u,v)]['cap'] - self.G.edge_dict[(u,v)]['flow']
         elif (v,u) in self.G.edge_dict:
             return self.G.edge_dict[(v,u)]['flow']
