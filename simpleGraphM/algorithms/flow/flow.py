@@ -195,13 +195,14 @@ class MaxFlow:
         # Report the good news
         pass
 
-    def residual_cap(self,u,v):
-        if (u,v) in self.G.edge_dict:
-            return self.G.edge_dict[(u,v)]['cap'] - self.G.edge_dict[(u,v)]['flow']
-        elif (v,u) in self.G.edge_dict:
-            return self.G.edge_dict[(v,u)]['flow']
-        else:
-            return 0
+    # Original residual_cap definition
+    # def residual_cap(self,u,v):
+    #     if (u,v) in self.G.edge_dict:
+    #         return self.G.edge_dict[(u,v)]['cap'] - self.G.edge_dict[(u,v)]['flow']
+    #     elif (v,u) in self.G.edge_dict:
+    #         return self.G.edge_dict[(v,u)]['flow']
+    #     else:
+    #         return 0
 
     def __residual_cap(self,u,v):
         if (u,v) in self.G.edge_dict and (v,u) in self.G.edge_dict:
