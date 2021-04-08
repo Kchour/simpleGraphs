@@ -127,8 +127,7 @@ class TestFlow(unittest.TestCase):
         self.assertEqual(mf.maxFlowVal, mf.minCutVal)
 
     def test_max_flow_with_fordfulkerson_edkarp_simple_3(self):
-        # Define some edges
-       
+        # Define some edges       
         edgeDict = {('S', 'A'): {"cap": 4},
                     ('S', 'B'): {"cap": 2},
                     ('A', 'C'): {"cap": 3},

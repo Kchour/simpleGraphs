@@ -136,11 +136,11 @@ class MaxFlow:
             # print("Pushing", del_f, u,  "to", v)
 
     def __relabel(self, u):
-        """Relabel the overflowing node u s.t. for all outgoing edges with non-zero residual capacity, +1 to min height
+        """Relabel the overflowing node u if all neighbors of u (outgoing edges) have equal or greater height
         
         """
         if self.G.vertex_dict[u]["excess"]>0:
-            UV_LESS_THAN = True
+            UV_LESS_THAN_EQ = True
             min_h = None
             for v in self.Gf.neighbors(u):
                 if self.__residual_cap(u,v) > 0: 
@@ -148,8 +148,9 @@ class MaxFlow:
                         if min_h is None or self.G.vertex_dict[v]["height"] < min_h:
                             min_h = self.G.vertex_dict[v]["height"]
                     else:
-                        UV_LESS_THAN = False
-            if min_h is not None and UV_LESS_THAN is True:
+                        UV_LESS_THAN_EQ = False
+                        continue
+            if min_h is not None and UV_LESS_THAN_EQ is True:
                 # print("relabeled", u, self.G.vertex_dict[u]["height"], "to",  1 + min_h)
                 self.G.vertex_dict[u]["height"] = 1 + min_h
 
@@ -169,7 +170,7 @@ class MaxFlow:
             for e in zip(path, path[1:]):
                 if min_cf is None or self.__residual_cap(e[0], e[1]) < min_cf:
                     min_cf = self.__residual_cap(e[0], e[1])
-            # increment the flow in graph G
+            # increment the flow among the edges in the augmenting path of graph G
             for e in zip(path, path[1:]):
                 if e in self.G.edge_dict and (e[1], e[0]) in self.G.edge_dict:
                     # special case when both arcs exist. Decrease reverse flow as much as possible, then increase
