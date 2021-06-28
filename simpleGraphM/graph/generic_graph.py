@@ -98,6 +98,13 @@ class GenericGraph(Graph):
     # CREATE SETTER AND GETTER FUNCTION FOR vertex_dict attribute
     # LET adjList keep track of vertex_dict instead! j
 
+    @property
+    def edges(self):
+        return self.edge_dict
+
+    @property 
+    def vertices(self):
+        return self.vertex_dict
 
     def edge_count(self):
         if self.edge_dict is not None:   
@@ -140,24 +147,35 @@ class GenericGraph(Graph):
 
         """
         for e in edge_list:
-            #self.edge_dict.pop(e)  #slightly slower
-            del self.edge_dict[e]
             
-            # update adjacency list
+            # update adjacency list and edge dict
             if self.graph_type == "directed":
+                # update adjacency list
                 if e[1] in self.adjList[e[0]]:
                     self.adjList[e[0]].remove(e[1])
+                
+                # update edge_dict 
+                # self.edge_dict.pop(e)  #slightly slower
+                del self.edge_dict[e]   #raises KeyError if not there
             else:
+                # update adjacency list in both directions
                 if e[1] in self.adjList[e[0]]:
                     self.adjList[e[0]].remove(e[1])
                 if e[0] in self.adjList[e[1]]:
                     self.adjList[e[1]].remove(e[0])
+                
+                # update edge dicts in both directions
+                del self.edge_dict[e]
+                del self.edge_dict[(e[1], e[0])]
 
     def remove_vertices(self, vertex_list):
         """Delete vertices from our graph
 
         Arg:
             vertex_list (iter of vertices):
+
+        Todo:
+            - delete edges associated with deleted vertex
         
         """
         for v in vertex_list:
@@ -171,8 +189,11 @@ class GenericGraph(Graph):
         
         """
         # neighs = [n for n in self.adjList[v]]
-        neighs = self.adjList[v]
-        return neighs
+        if v in self.adjList:
+            neighs = self.adjList[v]
+            return neighs
+        else:
+            return []
     
     def cost(self, *args, **kwargs):
         """Return cost of edge or vertex based on number of args
